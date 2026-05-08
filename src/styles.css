@@ -1,0 +1,668 @@
+/* === General Styles === */
+:root {
+    --bg: #1c1f24;
+    --surface: #262a31;
+    --surface-2: #2e333b;
+    --board: #20242a;
+    --cell: #353b45;
+    --cell-rim: #3f4651;
+    --ink: #e6e8ec;
+    --ink-soft: #a8adb6;
+    --ink-faint: #6e7480;
+    --line: #3a3f48;
+    --line-soft: #2f343c;
+
+    --accent: #4a90e2;
+    --accent-strong: #5fa8f5;
+    --accent-deep: #2f6dbf;
+    --accent-soft: #7fb6ee;
+
+    --piece-color: #0d6efd;
+}
+
+/* Reset */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Inter", system-ui, -apple-system, sans-serif;
+    font-size: 19px;
+    -webkit-font-smoothing: antialiased;
+}
+
+button {
+    font-family: inherit;
+    cursor: pointer;
+}
+
+:focus:not(:focus-visible) {
+    outline: none;
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+/* === Header === */
+.app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 25px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line-soft);
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.app-header .title {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+}
+
+.gear-btn {
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface-2);
+    color: var(--ink-soft);
+    display: grid;
+    place-items: center;
+    transition: background 0.12s, color 0.12s;
+}
+
+.gear-btn:hover {
+    background: var(--cell);
+    color: var(--ink);
+}
+
+/* === Game area === */
+.game-area {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: var(--bg);
+    min-height: 0;
+}
+
+/* === Today pill === */
+.today-pill {
+    position: absolute;
+    top: 18px;
+    left: 18px;
+    z-index: 5;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 15px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 16px;
+    color: var(--ink);
+    user-select: none;
+}
+
+.today-pill .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+}
+
+/* === Hint button === */
+.hint-btn {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    z-index: 5;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--surface-2);
+    color: var(--ink-soft);
+    display: grid;
+    place-items: center;
+    transition: background 0.12s, color 0.12s, opacity 0.12s;
+    cursor: pointer;
+    user-select: none;
+}
+
+.hint-btn:hover:not(:disabled) {
+    background: var(--cell);
+    color: var(--ink);
+}
+
+.hint-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.hint-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: "JetBrains Mono", monospace;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+}
+
+.hint-btn:disabled .hint-badge {
+    display: none;
+}
+
+/* === Grid wrapper === */
+.grid-wrapper {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none; /* passes clicks through to pieces */
+}
+
+/* === Puzzle grid === */
+.puz-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    padding: 8px;
+    width: clamp(350px, 45vw, 525px);
+    background: var(--board);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    pointer-events: all;
+}
+
+.puz-cell {
+    aspect-ratio: 1;
+    background: var(--cell);
+    display: grid;
+    place-items: center;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    user-select: none;
+    text-transform: uppercase;
+}
+
+.puz-cell.disabled {
+    background: transparent;
+    pointer-events: none;
+}
+
+.puz-cell.today {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 0 0 1.5px var(--accent-strong) inset;
+    font-weight: 700;
+}
+
+/* === Puzzle pieces === */
+
+.piece {
+    display: grid;
+    grid-auto-rows: 1fr;
+    grid-template-columns: repeat(var(--cols, 3), 1fr);
+    gap: 0;
+    position: absolute;
+    touch-action: none;
+    user-select: none;
+    pointer-events: none;
+}
+
+.piece:not(.dragging) {
+    cursor: grab;
+}
+
+.piece.dragging {
+    cursor: grabbing;
+    z-index: 100;
+}
+
+/* === Piece transform animations === */
+@keyframes anim-rotate {
+    from {
+        transform: rotate(-90deg);
+    }
+    to {
+        transform: rotate(0deg);
+    }
+}
+
+@keyframes anim-rotate-ccw {
+    from {
+        transform: rotate(90deg);
+    }
+    to {
+        transform: rotate(0deg);
+    }
+}
+
+@keyframes anim-flip {
+    from {
+        transform: scaleX(-1);
+    }
+    to {
+        transform: scaleX(1);
+    }
+}
+
+.piece.anim-rotate {
+    animation: anim-rotate 150ms ease-out;
+}
+
+.piece.anim-rotate-ccw {
+    animation: anim-rotate-ccw 150ms ease-out;
+}
+
+.piece.anim-flip {
+    animation: anim-flip 150ms ease-out;
+}
+
+.piece .pc {
+    background: var(--piece-color);
+    border-radius: 0;
+    pointer-events: all; /* only solid cells are hittable */
+}
+
+.piece .pc.empty {
+    background: transparent;
+    pointer-events: none;
+}
+
+/* === Snap preview === */
+.puz-cell.preview-valid {
+    background: rgba(74, 144, 226, 0.35);
+    outline: 1.5px solid rgba(95, 168, 245, 0.7);
+    outline-offset: -1.5px;
+}
+
+.puz-cell.preview-invalid {
+    background: rgba(200, 70, 60, 0.35);
+    outline: 1.5px solid rgba(220, 90, 80, 0.6);
+    outline-offset: -1.5px;
+}
+
+/* === Footer === */
+.app-footer {
+    display: flex;
+    gap: 15px;
+    padding: 13px 25px 15px;
+    justify-content: center;
+    background: var(--surface);
+    border-top: 1px solid var(--line-soft);
+    flex-shrink: 0;
+}
+
+.footer-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 11px 8px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    transition: background 0.12s;
+    max-width: 160px;
+}
+
+.footer-btn:hover {
+    background: var(--cell);
+}
+
+/* === Settings modal === */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(2px);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay.open {
+    display: flex;
+}
+
+.modal {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 15px;
+    padding: 25px 28px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+    width: 400px;
+    max-width: 90vw;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--line);
+}
+
+.modal-header h5 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.modal-close-btn {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface-2);
+    color: var(--ink-soft);
+    font-size: 16px;
+    display: grid;
+    place-items: center;
+    transition: background 0.12s, color 0.12s;
+}
+
+.modal-close-btn:hover {
+    background: var(--cell);
+    color: var(--ink);
+}
+
+.guide-section {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line-soft);
+}
+
+.guide-section:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.guide-label {
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: 7px;
+}
+
+.guide-text {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+}
+
+.shortcut-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 0;
+    font-size: 14px;
+    color: var(--ink-soft);
+}
+
+.shortcut-row kbd {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 2px 8px;
+    color: var(--ink);
+    white-space: nowrap;
+    /*min-width: 64px;*/
+    text-align: center;
+    flex-shrink: 0;
+}
+
+/* === Win badge === */
+.win-badge {
+    position: absolute;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-6px);
+    opacity: 0;
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+    z-index: 10000;
+    pointer-events: none;
+    background: var(--accent);
+    color: #fff;
+    padding: 7px 20px;
+    border-radius: 8px;
+    border: 1px solid var(--accent-strong);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(74, 144, 226, 0.4);
+}
+
+.win-badge.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* === Win shimmer === */
+@keyframes shimmer-sweep {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(100%);
+    }
+}
+
+.shimmer-sweep {
+    position: absolute;
+    inset: -50%;
+    background: linear-gradient(
+            135deg,
+            transparent 40%,
+            rgba(255, 255, 255, 0.16) 50%,
+            transparent 60%
+    );
+    pointer-events: none;
+    animation: shimmer-sweep 1400ms ease-in-out forwards;
+}
+
+/* === Date picker === */
+.today-pill {
+    cursor: pointer;
+}
+
+.today-pill:hover {
+    background: var(--cell);
+}
+
+.date-picker {
+    position: fixed;
+    z-index: 200;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    width: 260px;
+    display: none;
+}
+
+.date-picker.open {
+    display: block;
+}
+
+.dp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.dp-nav {
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--surface-2);
+    color: var(--ink-soft);
+    font-size: 14px;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: background 0.1s, color 0.1s;
+}
+
+.dp-nav:hover {
+    background: var(--cell);
+    color: var(--ink);
+}
+
+.dp-month-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+}
+
+.dp-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    margin-bottom: 4px;
+}
+
+.dp-weekday {
+    text-align: center;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 4px 0;
+}
+
+.dp-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.dp-day {
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+    font-family: "JetBrains Mono", monospace;
+    color: var(--ink-soft);
+    border-radius: 5px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: background 0.1s, color 0.1s;
+}
+
+.dp-day:hover {
+    background: var(--cell);
+    color: var(--ink);
+}
+
+.dp-day.other-month {
+    color: var(--ink-faint);
+}
+
+.dp-day.is-today {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.dp-day.selected {
+    background: var(--accent);
+    color: #fff;
+    border-color: transparent;
+}
+
+.dp-day.selected:hover {
+    background: var(--accent-strong);
+}
+
+.dp-footer {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+}
+
+.dp-today-btn {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--accent);
+    background: none;
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    padding: 5px 14px;
+    cursor: pointer;
+    transition: background 0.1s, color 0.1s;
+}
+
+.dp-today-btn:hover {
+    background: var(--accent);
+    color: #fff;
+}
+
+/* === Utility === */
+.mono {
+    font-family: "JetBrains Mono", monospace;
+}
+
+/* === Mobile layout === */
+@media (max-width: 768px) {
+    /* Grid moves to top, pieces scatter into the space below it */
+    .grid-wrapper {
+        align-items: flex-start;
+        padding-top: 68px;
+    }
+
+    .puz-grid {
+        width: clamp(280px, 88vw, 420px);
+    }
+}
+
+@media (max-width: 430px) {
+    /* Hide text labels on footer buttons */
+    .footer-btn span {
+        display: none;
+    }
+
+    .footer-btn {
+        padding: 13px;
+        gap: 0;
+    }
+}
