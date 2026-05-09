@@ -258,11 +258,23 @@ function applyTransform(id, fn, animClass) {
     s.shape = fn(s.shape);
     updatePieceEl(s.el, s.shape, m.cellSize);
 
-    // Reposition so the center stays at the same screen point
     const newW = parseFloat(s.el.style.width);
     const newH = parseFloat(s.el.style.height);
-    s.el.style.left = `${cx - newW / 2}px`;
-    s.el.style.top = `${cy - newH / 2}px`;
+
+    const snap = posToCell(cx - newW / 2, cy - newH / 2, m);
+    if (isNearGrid(s.shape, snap.row, snap.col) && canPlace(s.shape, snap.row, snap.col, board)) {
+        board = placePiece(s.shape, snap.row, snap.col, board, id);
+        s.onGrid = true;
+        s.gridRow = snap.row;
+        s.gridCol = snap.col;
+        const pos = cellToPos(snap.row, snap.col, m);
+        s.el.style.left = `${pos.x}px`;
+        s.el.style.top = `${pos.y}px`;
+        if (isSolved(board, todayRef)) onSolvedCb?.();
+    } else {
+        s.el.style.left = `${cx - newW / 2}px`;
+        s.el.style.top = `${cy - newH / 2}px`;
+    }
 
     // Trigger animation on the element
     s.el.classList.remove("anim-rotate", "anim-rotate-ccw", "anim-flip");
