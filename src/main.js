@@ -9,7 +9,8 @@ import {
     updateToday,
     triggerHint,
     getHintsLeft,
-    isBoardSolved
+    isBoardSolved,
+    checkSolvable,
 } from "./drag.js";
 
 const savedDateStr = localStorage.getItem("cal-puz:active-date");
@@ -42,7 +43,14 @@ document.getElementById("app").innerHTML = `
         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
             <path d="M400-240q-33 0-56.5-23.5T320-320v-50q-57-39-88.5-100T200-600q0-117 81.5-198.5T480-880q117 0 198.5 81.5T760-600q0 69-31.5 129.5T640-370v50q0 33-23.5 56.5T560-240H400Zm0-80h160v-92l34-24q41-28 63.5-71.5T680-600q0-83-58.5-141.5T480-800q-83 0-141.5 58.5T280-600q0 49 22.5 92.5T366-436l34 24v92Zm0 240q-17 0-28.5-11.5T360-120v-40h240v40q0 17-11.5 28.5T560-80H400Zm80-520Z"/>
         </svg>
-        <span class="hint-badge" id="hint-badge">3</span></button>
+        <span class="hint-badge" id="hint-badge">3</span>
+    </button>
+
+    <button class="check-btn" id="check-btn" aria-label="Check if solvable">
+        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
+            <path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z"/>
+        </svg>
+    </button>
 
     <div class="grid-wrapper">
         <div class="puz-grid" id="puzzle-grid"></div>
@@ -95,6 +103,10 @@ document.getElementById("app").innerHTML = `
             <p class="guide-text">You get 3 hints per puzzle. Each hint places one piece in its correct position. Hints reset when you change the date.</p>
         </div>
         <div class="guide-section">
+            <div class="guide-label">Solvable Check</div>
+            <p class="guide-text">If you are stuck, you can use the magnifying glass button to check whether the board can still be solved from its current state.</p>
+        </div>
+        <div class="guide-section">
             <div class="guide-label">Shortcuts</div>
             <div class="shortcut-row"><kbd>R</kbd><span>Rotate clockwise</span></div>
             <div class="shortcut-row"><kbd>Shift</kbd>+<kbd>R</kbd><span>Rotate counter-clockwise</span></div>
@@ -134,9 +146,23 @@ function updateHintBtn() {
     hintBtn.disabled = left === 0 || isBoardSolved();
 }
 
+function showCheckToast(solvable) {
+    document.getElementById("check-toast")?.remove();
+    const toast = document.createElement("div");
+    toast.id = "check-toast";
+    toast.className = `check-toast ${solvable ? "solvable" : "unsolvable"}`;
+    toast.textContent = solvable ? "✓ A solution exists from here" : "✕ No solution from here";
+    document.getElementById("game-area").appendChild(toast);
+    setTimeout(() => {
+        toast.classList.add("fade-out");
+        setTimeout(() => toast.remove(), 400);
+    }, 3000);
+}
+
 initGame(today, () => {
     document.getElementById("win-badge").classList.add("visible");
     document.getElementById("hint-btn").disabled = true;
+    document.getElementById("check-btn").disabled = true;
     triggerSweep();
 }, updateHintBtn);
 
@@ -160,10 +186,23 @@ document.getElementById("hint-btn").addEventListener("click", () => {
     updateHintBtn();
 });
 
+// === Check button ===
+document.getElementById("check-btn").addEventListener("click", () => {
+    const btn = document.getElementById("check-btn");
+    btn.disabled = true;
+    btn.blur();
+    setTimeout(() => {
+        const solvable = checkSolvable();
+        btn.disabled = isBoardSolved();
+        showCheckToast(solvable);
+    }, 0);
+});
+
 // === Footer buttons ===
 document.getElementById("reset-btn").addEventListener("click", () => {
     resetBoard();
     updateHintBtn();
+    document.getElementById("check-btn").disabled = false;
 });
 document.getElementById("rotate-ccw-btn").addEventListener("click", rotateLastCCW);
 document.getElementById("rotate-btn").addEventListener("click", rotateLast);
@@ -268,6 +307,7 @@ function selectDate(date) {
     renderGrid(document.getElementById("puzzle-grid"), newToday);
     updateToday(newToday);
     updateHintBtn();
+    document.getElementById("check-btn").disabled = false;
 
     renderPicker();
     closePicker();

@@ -173,6 +173,77 @@ button {
     display: none;
 }
 
+/* === Check button === */
+.check-btn {
+    position: absolute;
+    bottom: 18px;
+    right: 18px;
+    z-index: 5;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--surface-2);
+    color: var(--ink-soft);
+    display: grid;
+    place-items: center;
+    transition: background 0.12s, color 0.12s;
+    cursor: pointer;
+    user-select: none;
+}
+
+.check-btn:hover:not(:disabled) {
+    background: var(--cell);
+    color: var(--ink);
+}
+
+.check-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+/* === Check toast === */
+@keyframes toast-in {
+    from { opacity: 0; transform: translateX(-50%) translateY(6px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes toast-out {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+}
+
+.check-toast {
+    position: absolute;
+    bottom: 72px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 6;
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    pointer-events: none;
+    animation: toast-in 180ms ease-out;
+}
+
+.check-toast.solvable {
+    background: #1a5c2a;
+    border: 1px solid #2d9148;
+    color: #fff;
+}
+
+.check-toast.unsolvable {
+    background: #6b1f1f;
+    border: 1px solid #a83030;
+    color: #fff;
+}
+
+.check-toast.fade-out {
+    animation: toast-out 400ms ease-out forwards;
+}
+
 /* === Grid wrapper === */
 .grid-wrapper {
     position: absolute;

@@ -104,3 +104,53 @@ export function solve(today) {
 
     return backtrack(initial, pieces, []);
 }
+
+export function canCompleteFrom(currentBoard, unplacedPieceIds, today) {
+    const board = currentBoard.map(r => [...r]);
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 7; c++) {
+            const cell = GRID_ROWS[r][c];
+            if (cell === today.month || cell === today.day || cell === today.weekday) {
+                if (board[r][c] === null) board[r][c] = '__today__';
+            }
+        }
+    }
+
+    const pieces = unplacedPieceIds.map(id => ({
+        id,
+        orientations: genOrientations(PIECES.find(p => p.id === id).shape),
+    }));
+
+    function backtrack(board, remaining) {
+        if (remaining.length === 0) return isSolved(board, today);
+
+        let tr = -1, tc = -1;
+        outer: for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 7; c++) {
+                if (GRID_ROWS[r][c] === null) continue;
+                if (board[r][c] !== null) continue;
+                tr = r; tc = c;
+                break outer;
+            }
+        }
+        if (tr === -1) return false;
+
+        for (let pi = 0; pi < remaining.length; pi++) {
+            const { id, orientations } = remaining[pi];
+            const rest = [...remaining.slice(0, pi), ...remaining.slice(pi + 1)];
+            for (const shape of orientations) {
+                for (let dr = 0; dr < shape.length; dr++) {
+                    for (let dc = 0; dc < shape[dr].length; dc++) {
+                        if (!shape[dr][dc]) continue;
+                        const row = tr - dr, col = tc - dc;
+                        if (!canPlace(shape, row, col, board)) continue;
+                        if (backtrack(placePiece(shape, row, col, board, id), rest)) return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    return backtrack(board, pieces);
+}

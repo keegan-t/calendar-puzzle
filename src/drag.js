@@ -4,7 +4,7 @@ import {
     getGridMetrics, cellToPos, posToCell,
     createBoard, canPlace, placePiece, liftPiece, isSolved,
 } from "./board.js";
-import { solve } from "./solver.js";
+import { solve, canCompleteFrom } from "./solver.js";
 
 // === Module state ===
 let board = createBoard();
@@ -175,6 +175,32 @@ export function rotateLastCCW() {
 export function flipLast() {
     if (activeDrag || !lastPieceId) return;
     applyTransform(lastPieceId, flipH, "anim-flip");
+}
+
+export function checkSolvable() {
+    if (!todayRef) return true;
+    const m = getGridMetrics();
+    const unplacedIds = [];
+
+    for (const id in pieceMap) {
+        const s = pieceMap[id];
+        if (s.onGrid) continue;
+
+        // Check for invalid board state
+        const snap = posToCell(parseFloat(s.el.style.left) || 0, parseFloat(s.el.style.top) || 0, m);
+        for (let r = 0; r < s.shape.length; r++) {
+            for (let c = 0; c < s.shape[r].length; c++) {
+                if (!s.shape[r][c]) continue;
+                const gr = snap.row + r, gc = snap.col + c;
+                if (gr < 0 || gr >= 8 || gc < 0 || gc >= 7) continue;
+                if (board[gr][gc] !== null) return false;
+            }
+        }
+
+        unplacedIds.push(id);
+    }
+
+    return canCompleteFrom(board, unplacedIds, todayRef);
 }
 
 export function getHintsLeft() {
