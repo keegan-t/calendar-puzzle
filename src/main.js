@@ -109,7 +109,7 @@ document.getElementById("app").innerHTML = `
         <div class="guide-section">
             <div class="guide-label">Shortcuts</div>
             <div class="shortcut-row"><kbd>R</kbd><span>Rotate clockwise</span></div>
-            <div class="shortcut-row"><kbd>Shift</kbd>+<kbd>R</kbd><span>Rotate counter-clockwise</span></div>
+            <div class="shortcut-row"><kbd>Q</kbd><span>Rotate counter-clockwise</span></div>
             <div class="shortcut-row"><kbd>F</kbd><span>Flip horizontally</span></div>
         </div>
     </div>
@@ -382,6 +382,7 @@ document.addEventListener("keydown", e => {
         closeModal();
         closePicker();
     }
-    if (e.key.toLowerCase() === "r") e.shiftKey ? rotateLastCCW() : rotateLast();
-    if (e.key === "f" || e.key === "F") flipLast();
+    if (e.key.toLowerCase() === "r") rotateLast();
+    if (e.key.toLowerCase() === "q") rotateLastCCW();
+    if (e.key.toLowerCase() === "f") flipLast();
 });
