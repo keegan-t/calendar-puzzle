@@ -16,7 +16,7 @@ A daily puzzle game where you arrange 10 pieces on a calendar grid, leaving only
 |--------------------------|--------------------------|
 | Place a piece            | Drag onto the board      |
 | Rotate clockwise         | `R` or the Rotate button |
-| Rotate counter-clockwise | `Shift + R`              |
+| Rotate counter-clockwise | `Q` or the Rotate button |
 | Flip horizontally        | `F` or the Flip button   |
 | Reset the board          | Reset button             |
 | Hints (3 per puzzle)     | Lightbulb button         |
