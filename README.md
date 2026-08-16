@@ -1,4 +1,4 @@
-# <img src="public/icon.svg" width="36" align="center"> Calendar Puzzle
+# <img src="public/icon.svg" height="40" align="top" alt=""> Calendar Puzzle
 
 A daily puzzle game where you arrange 10 pieces on a calendar grid, leaving only today's month, day, and weekday uncovered. A new puzzle every day, with a unique solution for each date.
 
